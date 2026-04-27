@@ -1,0 +1,1961 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#FAFAF8">
+<title>Vital Track</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   VITAL TRACK — Webapp prototype monofichier
+   Conforme à la charte graphique v1.0 (avril 2026)
+   ========================================================================== */
+
+:root {
+  /* Palette stricte (9 couleurs) */
+  --bone: #FAFAF8;
+  --cloud: #F4F5F2;
+  --hairline: #E8E8E5;
+  --sage-pale: #E8EFE9;
+  --sage: #8AA89B;
+  --sage-deep: #5C7A6D;
+  --stone: #1A1F1C;
+  --graphite: #4A5550;
+  --mist: #8E9893;
+  --terra: #D4956A;
+  --crimson: #C5524A;
+
+  /* Typographies (SF Pro non disponible sur le web → fallback Inter, conforme charte) */
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif;
+  --font-text: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+
+  /* Espacements (multiples de 4/8) */
+  --s-micro: 4px;
+  --s-xs: 8px;
+  --s-s: 16px;
+  --s-m: 24px;
+  --s-l: 32px;
+  --s-xl: 48px;
+  --s-xxl: 64px;
+
+  /* Rayons */
+  --r-input: 8px;
+  --r-button: 12px;
+  --r-card: 16px;
+  --r-pill: 28px;
+
+  /* Animations */
+  --t-micro: 150ms;
+  --t-comp: 300ms;
+  --t-screen: 400ms;
+  --t-progress: 800ms;
+  --ease-std: cubic-bezier(0.4, 0.0, 0.2, 1);
+  --ease-out: cubic-bezier(0.0, 0.0, 0.2, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bone);
+  color: var(--stone);
+  font-family: var(--font-text);
+  font-size: 15px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  overflow: hidden;
+}
+
+/* ==========================================================================
+   Cadre mobile (centré sur desktop, plein écran sur mobile)
+   ========================================================================== */
+.app-frame {
+  width: 100%;
+  max-width: 430px;
+  height: 100vh;
+  margin: 0 auto;
+  background: var(--bone);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-left: 1px solid var(--hairline);
+  border-right: 1px solid var(--hairline);
+}
+
+@media (min-width: 768px) {
+  body {
+    background: var(--cloud);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .app-frame {
+    height: min(900px, 100vh);
+    max-height: 900px;
+    border-radius: 32px;
+    border: 1px solid var(--hairline);
+    overflow: hidden;
+  }
+}
+
+/* Status bar simulée */
+.status-bar {
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--stone);
+}
+
+.status-bar .right-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Contenu scrollable */
+.screen-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 24px 24px;
+  scrollbar-width: none;
+}
+.screen-container::-webkit-scrollbar { display: none; }
+
+.screen {
+  display: none;
+  animation: fadeIn 400ms var(--ease-out);
+}
+.screen.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================================
+   Typographie
+   ========================================================================== */
+.t-display { font-family: var(--font-display); font-size: 34px; font-weight: 700; line-height: 1.2; letter-spacing: -0.5px; }
+.t-h1 { font-family: var(--font-display); font-size: 28px; font-weight: 700; line-height: 1.2; letter-spacing: -0.3px; }
+.t-h2 { font-family: var(--font-display); font-size: 20px; font-weight: 600; line-height: 1.3; }
+.t-h3 { font-family: var(--font-display); font-size: 16px; font-weight: 600; line-height: 1.3; }
+.t-body { font-family: var(--font-text); font-size: 15px; font-weight: 400; line-height: 1.4; }
+.t-caption { font-family: var(--font-text); font-size: 12px; font-weight: 400; color: var(--mist); }
+.t-legend { font-family: var(--font-text); font-size: 10px; font-weight: 400; color: var(--mist); }
+
+.t-mono-xl { font-family: var(--font-mono); font-size: 44px; font-weight: 700; line-height: 1; letter-spacing: -1px; }
+.t-mono-lg { font-family: var(--font-mono); font-size: 28px; font-weight: 700; line-height: 1; }
+.t-mono { font-family: var(--font-mono); font-size: 16px; font-weight: 600; }
+.t-mono-sm { font-family: var(--font-mono); font-size: 13px; font-weight: 500; }
+
+.t-graphite { color: var(--graphite); }
+.t-mist { color: var(--mist); }
+.t-sage { color: var(--sage-deep); }
+
+/* ==========================================================================
+   Header d'écran
+   ========================================================================== */
+.screen-header {
+  padding-top: 8px;
+  padding-bottom: 24px;
+}
+.screen-header .greeting {
+  color: var(--mist);
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+/* ==========================================================================
+   Cards
+   ========================================================================== */
+.card {
+  background: var(--cloud);
+  border-radius: var(--r-card);
+  padding: 24px;
+  margin-bottom: 16px;
+}
+.card.bone { background: var(--bone); border: 1px solid var(--hairline); }
+.card-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ==========================================================================
+   Boutons
+   ========================================================================== */
+.btn {
+  height: 56px;
+  border: none;
+  border-radius: var(--r-pill);
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--t-micro) var(--ease-std);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 24px;
+  width: 100%;
+}
+.btn-primary { background: var(--sage); color: var(--bone); }
+.btn-primary:active { background: var(--sage-deep); }
+.btn-secondary { background: transparent; color: var(--stone); border: 1px solid var(--hairline); }
+.btn-tertiary { background: transparent; color: var(--sage-deep); height: auto; padding: 8px; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-small {
+  height: 36px;
+  font-size: 13px;
+  padding: 0 16px;
+  border-radius: 18px;
+  width: auto;
+}
+
+.btn-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cloud);
+  border: none;
+  cursor: pointer;
+  color: var(--stone);
+}
+
+/* ==========================================================================
+   Inputs
+   ========================================================================== */
+.input-group { margin-bottom: 16px; }
+.input-label {
+  display: block;
+  font-size: 13px;
+  color: var(--mist);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+.input {
+  width: 100%;
+  height: 56px;
+  background: var(--cloud);
+  border: 1px solid transparent;
+  border-radius: var(--r-button);
+  padding: 0 16px;
+  font-family: var(--font-text);
+  font-size: 17px;
+  color: var(--stone);
+  transition: border-color var(--t-micro) var(--ease-std);
+}
+.input:focus { outline: none; border-color: var(--sage); }
+
+/* ==========================================================================
+   Chips / Badges
+   ========================================================================== */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 16px;
+  background: var(--cloud);
+  color: var(--stone);
+  font-family: var(--font-text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all var(--t-micro) var(--ease-std);
+}
+.chip.active { background: var(--sage-pale); color: var(--sage-deep); }
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+/* ==========================================================================
+   Tab Bar
+   ========================================================================== */
+.tab-bar {
+  height: 84px;
+  flex-shrink: 0;
+  background: var(--bone);
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+  padding-top: 12px;
+  padding-bottom: 24px;
+}
+.tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--mist);
+  padding: 4px 8px;
+  transition: color var(--t-micro) var(--ease-std);
+  flex: 1;
+}
+.tab-item.active { color: var(--sage-deep); }
+.tab-item .tab-label {
+  font-size: 11px;
+  font-weight: 500;
+}
+.tab-item svg { width: 24px; height: 24px; }
+
+/* ==========================================================================
+   Anneau de progression (calories)
+   ========================================================================== */
+.calorie-ring-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px 0 24px;
+  position: relative;
+}
+.ring-svg { transform: rotate(-90deg); }
+.ring-track { stroke: var(--sage-pale); fill: none; }
+.ring-progress {
+  stroke: var(--sage);
+  fill: none;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 800ms var(--ease-out);
+}
+.ring-center {
+  position: absolute;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.ring-center .num { font-family: var(--font-mono); font-size: 44px; font-weight: 700; color: var(--stone); line-height: 1; letter-spacing: -1px; }
+.ring-center .unit { font-family: var(--font-text); font-size: 13px; color: var(--mist); margin-top: 8px; }
+.ring-center .sub { font-family: var(--font-mono); font-size: 13px; color: var(--mist); margin-top: 4px; }
+
+/* ==========================================================================
+   Barres de macros
+   ========================================================================== */
+.macro-row { margin-bottom: 16px; }
+.macro-row:last-child { margin-bottom: 0; }
+.macro-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+.macro-name { font-size: 13px; color: var(--graphite); font-weight: 500; }
+.macro-vals { font-family: var(--font-mono); font-size: 13px; color: var(--stone); font-weight: 600; }
+.macro-vals .total { color: var(--mist); font-weight: 500; }
+.macro-bar {
+  height: 6px;
+  background: var(--sage-pale);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.macro-bar-fill {
+  height: 100%;
+  background: var(--sage);
+  border-radius: 3px;
+  transition: width 800ms var(--ease-out);
+}
+
+/* ==========================================================================
+   Liste générique (séances, repas, exercices)
+   ========================================================================== */
+.list-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.list-item:last-child { border-bottom: none; }
+.list-item-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  background: var(--sage-pale);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--sage-deep);
+}
+.list-item-content { flex: 1; min-width: 0; }
+.list-item-title { font-size: 15px; font-weight: 500; color: var(--stone); margin-bottom: 2px; }
+.list-item-sub { font-size: 13px; color: var(--mist); }
+.list-item-trail { font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--graphite); }
+
+/* ==========================================================================
+   Semaine — grille 7 jours
+   ========================================================================== */
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+.week-day {
+  aspect-ratio: 1 / 1.4;
+  background: var(--cloud);
+  border-radius: 12px;
+  padding: 8px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--t-micro) var(--ease-std);
+  border: 1px solid transparent;
+}
+.week-day.today {
+  background: var(--sage-pale);
+  border-color: var(--sage);
+}
+.week-day.done { background: var(--sage); }
+.week-day.done .week-day-name,
+.week-day.done .week-day-num { color: var(--bone); }
+.week-day-name { font-size: 11px; color: var(--mist); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+.week-day-num { font-family: var(--font-mono); font-size: 20px; font-weight: 700; color: var(--stone); margin-top: 4px; }
+.week-day.today .week-day-name,
+.week-day.today .week-day-num { color: var(--sage-deep); }
+
+/* ==========================================================================
+   Stats rapides
+   ========================================================================== */
+.quick-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.stat-tile {
+  background: var(--cloud);
+  border-radius: 16px;
+  padding: 16px;
+  text-align: left;
+}
+.stat-tile-label {
+  font-size: 11px;
+  color: var(--mist);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+.stat-tile-value {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--stone);
+}
+.stat-tile-unit {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--mist);
+  font-weight: 500;
+  margin-left: 2px;
+}
+.stat-tile-trend {
+  font-size: 11px;
+  color: var(--sage-deep);
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   Streak
+   ========================================================================== */
+.streak-card {
+  background: var(--bone);
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.streak-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 24px;
+  background: var(--sage-pale);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--terra);
+  flex-shrink: 0;
+}
+.streak-content { flex: 1; }
+.streak-num {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--stone);
+  line-height: 1;
+}
+.streak-label {
+  font-size: 13px;
+  color: var(--mist);
+  margin-top: 4px;
+}
+
+/* ==========================================================================
+   Graphique poids (SVG simple)
+   ========================================================================== */
+.chart-wrap {
+  height: 180px;
+  position: relative;
+  margin-bottom: 16px;
+}
+.chart-wrap svg { width: 100%; height: 100%; }
+.chart-line { fill: none; stroke: var(--sage); stroke-width: 2; }
+.chart-area { fill: var(--sage-pale); opacity: 0.5; }
+.chart-target { fill: none; stroke: var(--mist); stroke-width: 1; stroke-dasharray: 4 4; }
+.chart-dot { fill: var(--sage-deep); }
+.chart-axis { fill: var(--mist); font-family: var(--font-mono); font-size: 10px; }
+
+/* Sélecteur de période */
+.period-selector {
+  display: flex;
+  background: var(--cloud);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 24px;
+}
+.period-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 8px 4px;
+  font-family: var(--font-text);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mist);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all var(--t-micro) var(--ease-std);
+}
+.period-btn.active {
+  background: var(--bone);
+  color: var(--stone);
+}
+
+/* ==========================================================================
+   Coach — chat
+   ========================================================================== */
+.coach-intro {
+  text-align: center;
+  padding: 32px 16px;
+}
+.coach-intro-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 32px;
+  background: var(--sage-pale);
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sage-deep);
+}
+.coach-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 24px;
+}
+.exercise-guide {
+  background: var(--cloud);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 16px;
+}
+.exercise-guide h3 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--stone);
+}
+.exercise-guide .muscles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.exercise-guide .muscle-tag {
+  background: var(--sage-pale);
+  color: var(--sage-deep);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.exercise-guide ol {
+  padding-left: 20px;
+  margin-bottom: 16px;
+}
+.exercise-guide ol li {
+  font-size: 14px;
+  color: var(--graphite);
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+.exercise-guide .pro-tip {
+  background: var(--sage-pale);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 16px;
+}
+.exercise-guide .pro-tip-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sage-deep);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.exercise-guide .pro-tip-text {
+  font-size: 13px;
+  color: var(--graphite);
+  line-height: 1.5;
+}
+
+/* Composer chat */
+.chat-input-wrap {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+.chat-input {
+  flex: 1;
+  height: 48px;
+  background: var(--cloud);
+  border: none;
+  border-radius: 24px;
+  padding: 0 20px;
+  font-family: var(--font-text);
+  font-size: 15px;
+}
+.chat-input:focus { outline: none; }
+
+/* ==========================================================================
+   Onboarding / Auth
+   ========================================================================== */
+.onboarding-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 16px 24px 24px;
+}
+.onboarding-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.onboarding-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--sage), var(--sage-deep));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bone);
+  margin-bottom: 32px;
+}
+.onboarding-title {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.5px;
+  margin-bottom: 16px;
+}
+.onboarding-subtitle {
+  font-size: 16px;
+  color: var(--mist);
+  line-height: 1.5;
+  margin-bottom: 32px;
+}
+.step-dots {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 24px;
+}
+.step-dot {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--hairline);
+  flex: 1;
+  transition: background var(--t-micro);
+}
+.step-dot.active { background: var(--sage); }
+
+/* Segmented selector */
+.segment-group {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.segment-option {
+  background: var(--cloud);
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 16px 20px;
+  font-family: var(--font-text);
+  font-size: 15px;
+  color: var(--stone);
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--t-micro) var(--ease-std);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.segment-option.selected {
+  border-color: var(--sage);
+  background: var(--sage-pale);
+  color: var(--sage-deep);
+}
+.segment-option .check {
+  opacity: 0;
+  color: var(--sage-deep);
+  transition: opacity var(--t-micro);
+}
+.segment-option.selected .check { opacity: 1; }
+
+/* ==========================================================================
+   Modal / Sheet
+   ========================================================================== */
+.sheet-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(26, 31, 28, 0.4);
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--t-comp) var(--ease-std);
+}
+.sheet-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+.sheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bone);
+  border-radius: 24px 24px 0 0;
+  padding: 12px 24px 32px;
+  z-index: 101;
+  transform: translateY(100%);
+  transition: transform 400ms var(--ease-out);
+  max-height: 85%;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.sheet.active { transform: translateY(0); }
+.sheet::-webkit-scrollbar { display: none; }
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--hairline);
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+.sheet-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+/* Recette détail */
+.recipe-image {
+  height: 200px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--sage-pale), var(--cloud));
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sage-deep);
+}
+.recipe-meta {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.recipe-meta-item .label { font-size: 11px; color: var(--mist); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.recipe-meta-item .value { font-family: var(--font-mono); font-size: 18px; font-weight: 600; color: var(--stone); }
+
+/* Mensurations */
+.measure-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.measure-item:last-child { border-bottom: none; }
+.measure-name { font-size: 15px; color: var(--stone); }
+.measure-value {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--graphite);
+}
+.measure-trend { font-size: 11px; color: var(--sage-deep); margin-left: 8px; font-family: var(--font-mono); }
+
+/* Set rows (séance) */
+.set-row {
+  display: grid;
+  grid-template-columns: 32px 1fr 1fr 44px;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 0;
+}
+.set-row .set-num {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--mist);
+  font-weight: 600;
+}
+.set-row .set-input {
+  height: 44px;
+  background: var(--cloud);
+  border: none;
+  border-radius: 8px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--stone);
+  width: 100%;
+}
+.set-row .set-input:focus { outline: 1px solid var(--sage); }
+.set-row .set-check {
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
+  background: var(--cloud);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mist);
+  margin: 0 auto;
+}
+.set-row.done .set-check { background: var(--sage); color: var(--bone); }
+
+.set-headers {
+  display: grid;
+  grid-template-columns: 32px 1fr 1fr 44px;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--hairline);
+  margin-bottom: 8px;
+}
+.set-headers div {
+  font-size: 11px;
+  color: var(--mist);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+  font-weight: 500;
+}
+.set-headers div:first-child { text-align: left; }
+
+/* Coach — message */
+.chat-message {
+  margin-bottom: 16px;
+  max-width: 85%;
+}
+.chat-message.user {
+  margin-left: auto;
+  background: var(--sage-pale);
+  color: var(--sage-deep);
+  padding: 12px 16px;
+  border-radius: 16px 16px 4px 16px;
+  font-size: 14px;
+}
+.chat-message.coach {
+  background: var(--cloud);
+  padding: 12px 16px;
+  border-radius: 16px 16px 16px 4px;
+  font-size: 14px;
+  color: var(--graphite);
+  line-height: 1.5;
+}
+
+/* Empty state */
+.empty {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--mist);
+}
+.empty-icon { margin-bottom: 16px; color: var(--mist); }
+.empty-title { font-size: 16px; font-weight: 500; color: var(--graphite); margin-bottom: 8px; }
+.empty-sub { font-size: 13px; }
+
+/* Liens dans la liste de courses */
+.shopping-section { margin-bottom: 24px; }
+.shopping-section-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--mist);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.shopping-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--hairline);
+  cursor: pointer;
+}
+.shopping-item:last-child { border-bottom: none; }
+.shopping-checkbox {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1.5px solid var(--mist);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--bone);
+  transition: all var(--t-micro);
+}
+.shopping-item.checked .shopping-checkbox {
+  background: var(--sage);
+  border-color: var(--sage);
+}
+.shopping-item.checked .shopping-name {
+  color: var(--mist);
+  text-decoration: line-through;
+}
+.shopping-name { flex: 1; font-size: 14px; color: var(--stone); }
+.shopping-qty { font-family: var(--font-mono); font-size: 13px; color: var(--mist); }
+
+/* Action bar bas d'écran */
+.action-bar {
+  position: absolute;
+  bottom: 84px;
+  left: 0;
+  right: 0;
+  padding: 16px 24px;
+  background: linear-gradient(to top, var(--bone) 60%, transparent);
+}
+
+/* Layouts */
+.row { display: flex; align-items: center; gap: 12px; }
+.row-between { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.col { display: flex; flex-direction: column; }
+.gap-8 { gap: 8px; }
+.gap-16 { gap: 16px; }
+.mt-8 { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mt-24 { margin-top: 24px; }
+.mb-16 { margin-bottom: 16px; }
+.mb-24 { margin-bottom: 24px; }
+.text-right { text-align: right; }
+
+</style>
+</head>
+<body>
+
+<div class="app-frame">
+
+  <!-- ==================================================================
+       STATUS BAR
+       ================================================================== -->
+  <div class="status-bar">
+    <span>9:41</span>
+    <div class="right-icons">
+      <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="10" y="2" width="3" height="10" rx="0.5"/><rect x="15" y="0" width="3" height="12" rx="0.5"/></svg>
+      <svg width="18" height="12" viewBox="0 0 18 12" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="14" height="8" rx="2"/><rect x="2.5" y="3.5" width="10" height="5" rx="1" fill="currentColor"/><rect x="16" y="4" width="1.5" height="4" rx="0.5" fill="currentColor"/></svg>
+    </div>
+  </div>
+
+  <!-- ==================================================================
+       SCREENS CONTAINER
+       ================================================================== -->
+  <div class="screen-container" id="screenContainer">
+
+    <!-- ==========================================================
+         WELCOME / AUTH
+         ========================================================== -->
+    <div class="screen onboarding-screen" id="screen-welcome">
+      <div class="onboarding-content">
+        <div class="onboarding-logo">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 26 C 10 14, 16 10, 26 8 C 22 18, 16 24, 6 26 Z"/>
+          </svg>
+        </div>
+        <div class="onboarding-title">Tes données.<br>Ton plan.<br>Sur-mesure.</div>
+        <div class="onboarding-subtitle">Toutes tes habitudes santé dans une seule application. Une intelligence qui te connaît mieux que toi-même.</div>
+      </div>
+      <div class="col" style="gap: 12px;">
+        <button class="btn btn-primary" onclick="goTo('onboarding-1')">Commencer</button>
+        <button class="btn btn-secondary" onclick="goTo('home')">J'ai déjà un compte</button>
+      </div>
+    </div>
+
+    <!-- ==========================================================
+         ONBOARDING 1 — Profil
+         ========================================================== -->
+    <div class="screen onboarding-screen" id="screen-onboarding-1">
+      <div class="row-between" style="margin-bottom: 24px;">
+        <button class="btn-icon" onclick="goTo('welcome')">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 4 L6 10 L12 16"/></svg>
+        </button>
+        <div class="t-caption">Étape 1 sur 3</div>
+      </div>
+      <div class="step-dots">
+        <div class="step-dot active"></div>
+        <div class="step-dot"></div>
+        <div class="step-dot"></div>
+      </div>
+      <h1 class="t-h1" style="margin-bottom: 8px;">Apprenons à te connaître</h1>
+      <p class="t-body t-mist mb-24">Quelques infos pour calculer tes besoins exacts.</p>
+
+      <div class="input-group">
+        <label class="input-label">Prénom</label>
+        <input type="text" class="input" value="Alexis">
+      </div>
+      <div class="input-group">
+        <label class="input-label">Sexe</label>
+        <div class="segment-group" style="grid-template-columns: 1fr 1fr;">
+          <button class="segment-option selected" onclick="selectSegment(this)">Homme<span class="check">✓</span></button>
+          <button class="segment-option" onclick="selectSegment(this)">Femme<span class="check">✓</span></button>
+        </div>
+      </div>
+      <div class="row gap-16">
+        <div class="input-group" style="flex:1;">
+          <label class="input-label">Âge</label>
+          <input type="text" class="input" value="28" inputmode="numeric">
+        </div>
+        <div class="input-group" style="flex:1;">
+          <label class="input-label">Taille (cm)</label>
+          <input type="text" class="input" value="178" inputmode="numeric">
+        </div>
+        <div class="input-group" style="flex:1;">
+          <label class="input-label">Poids (kg)</label>
+          <input type="text" class="input" value="76,4" inputmode="decimal">
+        </div>
+      </div>
+      <div style="height: 24px;"></div>
+      <button class="btn btn-primary" onclick="goTo('onboarding-2')">Continuer</button>
+    </div>
+
+    <!-- ==========================================================
+         ONBOARDING 2 — Programme
+         ========================================================== -->
+    <div class="screen onboarding-screen" id="screen-onboarding-2">
+      <div class="row-between" style="margin-bottom: 24px;">
+        <button class="btn-icon" onclick="goTo('onboarding-1')">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 4 L6 10 L12 16"/></svg>
+        </button>
+        <div class="t-caption">Étape 2 sur 3</div>
+      </div>
+      <div class="step-dots">
+        <div class="step-dot active"></div>
+        <div class="step-dot active"></div>
+        <div class="step-dot"></div>
+      </div>
+      <h1 class="t-h1" style="margin-bottom: 8px;">Ton type de séance</h1>
+      <p class="t-body t-mist mb-24">On adapte les programmes à ce que tu préfères.</p>
+
+      <div class="segment-group">
+        <button class="segment-option selected" onclick="selectSegment(this)">Push / Pull / Legs<span class="check">✓</span></button>
+        <button class="segment-option" onclick="selectSegment(this)">Upper / Lower<span class="check">✓</span></button>
+        <button class="segment-option" onclick="selectSegment(this)">Full Body<span class="check">✓</span></button>
+        <button class="segment-option" onclick="selectSegment(this)">Cardio<span class="check">✓</span></button>
+        <button class="segment-option" onclick="selectSegment(this)">HIIT<span class="check">✓</span></button>
+        <button class="segment-option" onclick="selectSegment(this)">Mobilité<span class="check">✓</span></button>
+      </div>
+
+      <div style="height: 8px;"></div>
+      <button class="btn btn-primary" onclick="goTo('onboarding-3')">Continuer</button>
+    </div>
+
+    <!-- ==========================================================
+         ONBOARDING 3 — Objectif
+         ========================================================== -->
+    <div class="screen onboarding-screen" id="screen-onboarding-3">
+      <div class="row-between" style="margin-bottom: 24px;">
+        <button class="btn-icon" onclick="goTo('onboarding-2')">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 4 L6 10 L12 16"/></svg>
+        </button>
+        <div class="t-caption">Étape 3 sur 3</div>
+      </div>
+      <div class="step-dots">
+        <div class="step-dot active"></div>
+        <div class="step-dot active"></div>
+        <div class="step-dot active"></div>
+      </div>
+      <h1 class="t-h1" style="margin-bottom: 8px;">Ton objectif</h1>
+      <p class="t-body t-mist mb-24">On ajuste les calories et les macros en fonction.</p>
+
+      <div class="segment-group">
+        <button class="segment-option" onclick="selectSegment(this)">Sèche — perte de gras<span class="check">✓</span></button>
+        <button class="segment-option selected" onclick="selectSegment(this)">Maintenance<span class="check">✓</span></button>
+        <button class="segment-option" onclick="selectSegment(this)">Prise de masse<span class="check">✓</span></button>
+      </div>
+
+      <div class="row gap-16">
+        <div class="input-group" style="flex:1;">
+          <label class="input-label">Poids cible (kg)</label>
+          <input type="text" class="input" value="74" inputmode="decimal">
+        </div>
+        <div class="input-group" style="flex:1;">
+          <label class="input-label">Échéance</label>
+          <input type="text" class="input" value="3 mois">
+        </div>
+      </div>
+
+      <div style="height: 8px;"></div>
+      <button class="btn btn-primary" onclick="goTo('home')">Lancer Vital Track</button>
+    </div>
+
+    <!-- ==========================================================
+         HOME — Accueil
+         ========================================================== -->
+    <div class="screen" id="screen-home">
+      <div class="screen-header">
+        <div class="greeting" id="greeting">Bonjour</div>
+        <h1 class="t-h1">Alexis</h1>
+      </div>
+
+      <div class="streak-card">
+        <div class="streak-icon">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 2 C 11 7, 6 8, 6 13 A 5 5 0 0 0 16 13 C 16 8, 11 7, 11 2 Z"/>
+          </svg>
+        </div>
+        <div class="streak-content">
+          <div class="streak-num">12 jours</div>
+          <div class="streak-label">Tu tiens le rythme. Continue.</div>
+        </div>
+      </div>
+
+      <div class="quick-stats">
+        <div class="stat-tile">
+          <div class="stat-tile-label">Poids</div>
+          <div class="stat-tile-value">76,4<span class="stat-tile-unit">kg</span></div>
+          <div class="stat-tile-trend">−1,2 ce mois</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-tile-label">Séances</div>
+          <div class="stat-tile-value">4<span class="stat-tile-unit">/5</span></div>
+          <div class="stat-tile-trend">cette semaine</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-tile-label">Sommeil</div>
+          <div class="stat-tile-value">7,3<span class="stat-tile-unit">h</span></div>
+          <div class="stat-tile-trend">moy. 7 jours</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>Macros aujourd'hui</span>
+          <button class="btn-tertiary" onclick="goToTab('nutrition')" style="font-size: 13px;">Détail →</button>
+        </div>
+        <div class="calorie-ring-wrap">
+          <svg class="ring-svg" width="180" height="180" viewBox="0 0 180 180">
+            <circle class="ring-track" cx="90" cy="90" r="78" stroke-width="12"/>
+            <circle class="ring-progress" cx="90" cy="90" r="78" stroke-width="12" stroke-dasharray="490" stroke-dashoffset="170"/>
+          </svg>
+          <div class="ring-center">
+            <div class="num">1 432</div>
+            <div class="unit">kcal consommées</div>
+            <div class="sub">/ 2 100</div>
+          </div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-head">
+            <span class="macro-name">Protéines</span>
+            <span class="macro-vals">112<span class="total"> / 155 g</span></span>
+          </div>
+          <div class="macro-bar"><div class="macro-bar-fill" style="width: 72%;"></div></div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-head">
+            <span class="macro-name">Glucides</span>
+            <span class="macro-vals">156<span class="total"> / 220 g</span></span>
+          </div>
+          <div class="macro-bar"><div class="macro-bar-fill" style="width: 71%;"></div></div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-head">
+            <span class="macro-name">Lipides</span>
+            <span class="macro-vals">42<span class="total"> / 75 g</span></span>
+          </div>
+          <div class="macro-bar"><div class="macro-bar-fill" style="width: 56%;"></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>Séance du jour</span>
+          <span class="t-caption">Push</span>
+        </div>
+        <div class="row gap-16 mb-16">
+          <div class="list-item-icon" style="width:48px; height:48px; border-radius:16px;">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <path d="M3 11 L7 11 M15 11 L19 11 M7 7 L7 15 M15 7 L15 15 M7 11 L15 11"/>
+            </svg>
+          </div>
+          <div style="flex:1;">
+            <div class="t-body" style="font-weight:500;">Pectoraux, épaules, triceps</div>
+            <div class="t-caption">6 exercices · environ 55 min</div>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="goToTab('workout')">Démarrer la séance</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>Sommeil</span>
+          <span class="t-caption">cette nuit</span>
+        </div>
+        <div class="row gap-16">
+          <div>
+            <div class="t-mono-lg">7h&nbsp;14</div>
+            <div class="t-caption mt-8">Couché à 23h26 · réveil 6h40</div>
+          </div>
+          <div style="flex:1;"></div>
+          <div class="t-caption">Qualité<br><span class="t-mono-sm" style="color:var(--sage-deep);">★★★★☆</span></div>
+        </div>
+      </div>
+
+      <div style="height: 100px;"></div>
+    </div>
+
+    <!-- ==========================================================
+         WORKOUT — Séance
+         ========================================================== -->
+    <div class="screen" id="screen-workout">
+      <div class="screen-header">
+        <h1 class="t-h1" style="margin-bottom: 4px;">Séance</h1>
+        <div class="t-caption">Lundi 27 avril · semaine 17</div>
+      </div>
+
+      <div class="card-title" style="margin-top: 8px;">Cette semaine</div>
+      <div class="week-grid mb-24">
+        <div class="week-day done"><div class="week-day-name">Lun</div><div class="week-day-num">21</div></div>
+        <div class="week-day done"><div class="week-day-name">Mar</div><div class="week-day-num">22</div></div>
+        <div class="week-day"><div class="week-day-name">Mer</div><div class="week-day-num">23</div></div>
+        <div class="week-day done"><div class="week-day-name">Jeu</div><div class="week-day-num">24</div></div>
+        <div class="week-day done"><div class="week-day-name">Ven</div><div class="week-day-num">25</div></div>
+        <div class="week-day"><div class="week-day-name">Sam</div><div class="week-day-num">26</div></div>
+        <div class="week-day today"><div class="week-day-name">Dim</div><div class="week-day-num">27</div></div>
+      </div>
+
+      <div class="card">
+        <div class="row-between mb-16">
+          <div>
+            <div class="t-h2">Push — Pec / Épaules / Tri</div>
+            <div class="t-caption mt-8">6 exercices · environ 55 min</div>
+          </div>
+          <button class="btn-icon" onclick="openSheet('exercise-detail')">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="5" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="10" cy="15" r="1.5"/></svg>
+          </button>
+        </div>
+
+        <div class="row gap-16" style="margin-bottom: 8px;">
+          <div class="list-item-icon" style="width:36px; height:36px; border-radius:12px; font-family: var(--font-mono); font-size: 13px; font-weight: 700;">1</div>
+          <div style="flex:1;">
+            <div class="t-body" style="font-weight: 600;">Développé couché barre</div>
+            <div class="t-caption">4 séries · objectif 8-10 reps</div>
+          </div>
+          <button class="btn-icon" onclick="openSheet('exercise-detail')">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 3 L12 9 L6 15"/></svg>
+          </button>
+        </div>
+
+        <div class="set-headers">
+          <div>#</div>
+          <div>Charge</div>
+          <div>Reps</div>
+          <div></div>
+        </div>
+        <div class="set-row done">
+          <span class="set-num">1</span>
+          <input class="set-input" value="60">
+          <input class="set-input" value="10">
+          <button class="set-check">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7 L6 11 L12 4"/></svg>
+          </button>
+        </div>
+        <div class="set-row done">
+          <span class="set-num">2</span>
+          <input class="set-input" value="65">
+          <input class="set-input" value="9">
+          <button class="set-check">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7 L6 11 L12 4"/></svg>
+          </button>
+        </div>
+        <div class="set-row">
+          <span class="set-num">3</span>
+          <input class="set-input" value="70">
+          <input class="set-input" value="8">
+          <button class="set-check" onclick="this.parentElement.classList.toggle('done')">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7 L6 11 L12 4"/></svg>
+          </button>
+        </div>
+        <div class="set-row">
+          <span class="set-num">4</span>
+          <input class="set-input" placeholder="—">
+          <input class="set-input" placeholder="—">
+          <button class="set-check" onclick="this.parentElement.classList.toggle('done')">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7 L6 11 L12 4"/></svg>
+          </button>
+        </div>
+
+        <div class="row mt-16" style="gap: 8px;">
+          <button class="chip" onclick="event.stopPropagation()">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="7" cy="7" r="5"/><path d="M7 4 L7 7 L9 8.5"/></svg>
+            Repos 90s
+          </button>
+          <button class="chip">Note</button>
+          <button class="chip">Remplacer</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row gap-16">
+          <div class="list-item-icon" style="width:36px; height:36px; border-radius:12px; font-family: var(--font-mono); font-size: 13px; font-weight: 700;">2</div>
+          <div style="flex:1;">
+            <div class="t-body" style="font-weight: 600;">Développé incliné haltères</div>
+            <div class="t-caption">4 séries · 10-12 reps</div>
+          </div>
+          <span class="t-mono-sm t-mist">à venir</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row gap-16">
+          <div class="list-item-icon" style="width:36px; height:36px; border-radius:12px; font-family: var(--font-mono); font-size: 13px; font-weight: 700;">3</div>
+          <div style="flex:1;">
+            <div class="t-body" style="font-weight: 600;">Élévations latérales</div>
+            <div class="t-caption">3 séries · 12-15 reps</div>
+          </div>
+          <span class="t-mono-sm t-mist">à venir</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="row gap-16">
+          <div class="list-item-icon" style="width:36px; height:36px; border-radius:12px; font-family: var(--font-mono); font-size: 13px; font-weight: 700;">4</div>
+          <div style="flex:1;">
+            <div class="t-body" style="font-weight: 600;">Dips assistés</div>
+            <div class="t-caption">3 séries · 10-12 reps</div>
+          </div>
+          <span class="t-mono-sm t-mist">à venir</span>
+        </div>
+      </div>
+
+      <div style="height: 120px;"></div>
+
+      <div class="action-bar">
+        <button class="btn btn-primary">Séance terminée</button>
+      </div>
+    </div>
+
+    <!-- ==========================================================
+         NUTRITION
+         ========================================================== -->
+    <div class="screen" id="screen-nutrition">
+      <div class="screen-header">
+        <h1 class="t-h1" style="margin-bottom: 4px;">Nutrition</h1>
+        <div class="t-caption">Plan du dimanche 27 avril</div>
+      </div>
+
+      <div class="card">
+        <div class="calorie-ring-wrap" style="margin: 0 0 16px;">
+          <svg class="ring-svg" width="200" height="200" viewBox="0 0 200 200">
+            <circle class="ring-track" cx="100" cy="100" r="86" stroke-width="14"/>
+            <circle class="ring-progress" cx="100" cy="100" r="86" stroke-width="14" stroke-dasharray="540" stroke-dashoffset="180"/>
+          </svg>
+          <div class="ring-center">
+            <div class="num">668</div>
+            <div class="unit">kcal restantes</div>
+            <div class="sub">2 100 cible</div>
+          </div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-head">
+            <span class="macro-name">Protéines</span>
+            <span class="macro-vals">112<span class="total"> / 155 g</span></span>
+          </div>
+          <div class="macro-bar"><div class="macro-bar-fill" style="width: 72%;"></div></div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-head">
+            <span class="macro-name">Glucides</span>
+            <span class="macro-vals">156<span class="total"> / 220 g</span></span>
+          </div>
+          <div class="macro-bar"><div class="macro-bar-fill" style="width: 71%;"></div></div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-head">
+            <span class="macro-name">Lipides</span>
+            <span class="macro-vals">42<span class="total"> / 75 g</span></span>
+          </div>
+          <div class="macro-bar"><div class="macro-bar-fill" style="width: 56%;"></div></div>
+        </div>
+      </div>
+
+      <div class="card-title" style="margin-top: 8px;">Repas du jour</div>
+
+      <div class="card" onclick="openSheet('recipe-detail')" style="cursor: pointer;">
+        <div class="row gap-16 mb-16">
+          <div class="list-item-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="6"/><path d="M10 4 L10 10 L14 12"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div class="t-caption">7h30 · Petit-déjeuner</div>
+            <div class="t-body" style="font-weight: 500;">Bowl avoine, fruits rouges, beurre d'amande</div>
+          </div>
+          <span class="t-mono-sm t-sage">validé</span>
+        </div>
+      </div>
+
+      <div class="card" onclick="openSheet('recipe-detail')" style="cursor: pointer;">
+        <div class="row gap-16 mb-16">
+          <div class="list-item-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="6"/><path d="M10 4 L10 10 L14 12"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div class="t-caption">12h30 · Déjeuner</div>
+            <div class="t-body" style="font-weight: 500;">Saumon grillé, riz basmati, brocolis</div>
+            <div class="t-caption mt-8">580 kcal · 42 g protéines</div>
+          </div>
+          <span class="t-mono-sm t-sage">validé</span>
+        </div>
+      </div>
+
+      <div class="card" onclick="openSheet('recipe-detail')" style="cursor: pointer; border: 1px solid var(--sage); background: var(--sage-pale);">
+        <div class="row gap-16 mb-16">
+          <div class="list-item-icon" style="background: var(--sage); color: var(--bone);">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="6"/><path d="M10 4 L10 10 L14 12"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div class="t-caption" style="color: var(--sage-deep);">19h30 · Dîner — à valider</div>
+            <div class="t-body" style="font-weight: 500;">Poulet curry, quinoa, légumes verts</div>
+            <div class="t-caption mt-8">620 kcal · 45 g protéines</div>
+          </div>
+        </div>
+        <div class="row gap-8" style="margin-left: 56px;">
+          <button class="chip active">Valider le repas</button>
+          <button class="chip">Repas libre</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>Plan IA — Semaine 17</span>
+          <button class="btn-tertiary" style="font-size: 13px;">Régénérer</button>
+        </div>
+        <p class="t-body t-graphite" style="line-height: 1.5;">7 jours de repas adaptés à ta sèche et à ce qu'il te reste dans le frigo. La liste de courses est prête.</p>
+        <div class="row gap-8 mt-16">
+          <button class="chip active">Voir les 7 jours</button>
+          <button class="chip">Liste de courses</button>
+        </div>
+      </div>
+
+      <div style="height: 100px;"></div>
+    </div>
+
+    <!-- ==========================================================
+         PROGRÈS
+         ========================================================== -->
+    <div class="screen" id="screen-progress">
+      <div class="screen-header">
+        <h1 class="t-h1" style="margin-bottom: 4px;">Progrès</h1>
+        <div class="t-caption">Mis à jour ce matin · 6h42</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>Poids</span>
+          <span class="t-caption">objectif 74 kg</span>
+        </div>
+        <div class="row" style="align-items: baseline; gap: 12px; margin-bottom: 8px;">
+          <div class="t-mono-xl">76,4</div>
+          <div class="t-caption">kg</div>
+          <div style="flex:1;"></div>
+          <div class="t-mono-sm" style="color: var(--sage-deep);">−2,4 depuis le départ</div>
+        </div>
+        <div class="t-caption mb-24">il te reste 2,4 kg pour atteindre ta cible</div>
+
+        <div class="period-selector">
+          <button class="period-btn">7j</button>
+          <button class="period-btn active">30j</button>
+          <button class="period-btn">3 mois</button>
+          <button class="period-btn">1 an</button>
+        </div>
+
+        <div class="chart-wrap">
+          <svg viewBox="0 0 320 160" preserveAspectRatio="none">
+            <line class="chart-target" x1="0" y1="120" x2="320" y2="120"/>
+            <path class="chart-area" d="M 0 60 L 27 65 L 54 58 L 80 70 L 107 75 L 134 68 L 160 80 L 187 88 L 214 82 L 240 92 L 267 95 L 294 100 L 320 95 L 320 160 L 0 160 Z"/>
+            <path class="chart-line" d="M 0 60 L 27 65 L 54 58 L 80 70 L 107 75 L 134 68 L 160 80 L 187 88 L 214 82 L 240 92 L 267 95 L 294 100 L 320 95"/>
+            <circle class="chart-dot" cx="320" cy="95" r="4"/>
+          </svg>
+        </div>
+
+        <div class="row-between">
+          <div>
+            <div class="t-caption">Départ</div>
+            <div class="t-mono-sm" style="margin-top: 4px;">78,8 kg</div>
+          </div>
+          <div style="flex:1; padding: 0 16px;">
+            <div class="macro-bar"><div class="macro-bar-fill" style="width: 50%;"></div></div>
+            <div class="t-legend text-right" style="margin-top: 4px;">50% du chemin</div>
+          </div>
+          <div class="text-right">
+            <div class="t-caption">Cible</div>
+            <div class="t-mono-sm" style="margin-top: 4px;">74,0 kg</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>Mensurations</span>
+          <button class="btn-tertiary" style="font-size: 13px;">Mettre à jour</button>
+        </div>
+        <div class="measure-item">
+          <span class="measure-name">Tour de poitrine</span>
+          <span class="measure-value">98 cm <span class="measure-trend">+1</span></span>
+        </div>
+        <div class="measure-item">
+          <span class="measure-name">Tour de taille</span>
+          <span class="measure-value">82 cm <span class="measure-trend">−3</span></span>
+        </div>
+        <div class="measure-item">
+          <span class="measure-name">Tour de hanches</span>
+          <span class="measure-value">96 cm <span class="measure-trend">−1</span></span>
+        </div>
+        <div class="measure-item">
+          <span class="measure-name">Bras (G / D)</span>
+          <span class="measure-value">36 / 36,5 cm</span>
+        </div>
+        <div class="measure-item">
+          <span class="measure-name">Cuisses (G / D)</span>
+          <span class="measure-value">58 / 58,5 cm</span>
+        </div>
+        <div class="measure-item">
+          <span class="measure-name">% Masse grasse</span>
+          <span class="measure-value">18,2 % <span class="measure-trend">−1,8</span></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Records personnels</div>
+        <div class="list-item">
+          <div class="list-item-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 10 L7 10 M13 10 L17 10 M7 6 L7 14 M13 6 L13 14 M7 10 L13 10"/></svg>
+          </div>
+          <div class="list-item-content">
+            <div class="list-item-title">Développé couché</div>
+            <div class="list-item-sub">9 reps à 70 kg · 24 avril</div>
+          </div>
+          <span class="list-item-trail">630 kg</span>
+        </div>
+        <div class="list-item">
+          <div class="list-item-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 10 L7 10 M13 10 L17 10 M7 6 L7 14 M13 6 L13 14 M7 10 L13 10"/></svg>
+          </div>
+          <div class="list-item-content">
+            <div class="list-item-title">Squat barre</div>
+            <div class="list-item-sub">5 reps à 100 kg · 22 avril</div>
+          </div>
+          <span class="list-item-trail">500 kg</span>
+        </div>
+        <div class="list-item">
+          <div class="list-item-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 10 L7 10 M13 10 L17 10 M7 6 L7 14 M13 6 L13 14 M7 10 L13 10"/></svg>
+          </div>
+          <div class="list-item-content">
+            <div class="list-item-title">Soulevé de terre</div>
+            <div class="list-item-sub">3 reps à 120 kg · 19 avril</div>
+          </div>
+          <span class="list-item-trail">360 kg</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Sommeil — 7 derniers jours</div>
+        <div class="row gap-16 mb-16">
+          <div>
+            <div class="t-mono-lg">7,3</div>
+            <div class="t-caption mt-8">heures en moyenne</div>
+          </div>
+          <div style="flex:1;"></div>
+          <div class="text-right">
+            <div class="t-mono-sm" style="color: var(--sage-deep);">+12 min</div>
+            <div class="t-legend">vs semaine -1</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: flex-end; gap: 8px; height: 80px;">
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
+            <div style="width:100%; background:var(--sage); border-radius:4px; height:62%;"></div>
+            <div class="t-legend mt-8">L</div>
+          </div>
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
+            <div style="width:100%; background:var(--sage); border-radius:4px; height:75%;"></div>
+            <div class="t-legend mt-8">M</div>
+          </div>
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
+            <div style="width:100%; background:var(--sage); border-radius:4px; height:55%;"></div>
+            <div class="t-legend mt-8">M</div>
+          </div>
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
+            <div style="width:100%; background:var(--sage); border-radius:4px; height:80%;"></div>
+            <div class="t-legend mt-8">J</div>
+          </div>
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
+            <div style="width:100%; background:var(--sage); border-radius:4px; height:85%;"></div>
+            <div class="t-legend mt-8">V</div>
+          </div>
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
+            <div style="width:100%; background:var(--sage); border-radius:4px; height:90%;"></div>
+            <div class="t-legend mt-8">S</div>
+          </div>
+          <div style="flex:1; display:flex; flex-direction:column; align-items:center;">
+            <div style="width:100%; background:var(--sage-deep); border-radius:4px; height:78%;"></div>
+            <div class="t-legend mt-8">D</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height: 100px;"></div>
+    </div>
+
+    <!-- ==========================================================
+         COACH IA
+         ========================================================== -->
+    <div class="screen" id="screen-coach">
+      <div class="screen-header">
+        <h1 class="t-h1" style="margin-bottom: 4px;">Coach</h1>
+        <div class="t-caption">Pose une question, tape un nom d'exercice</div>
+      </div>
+
+      <div class="exercise-guide">
+        <div class="muscles">
+          <span class="muscle-tag">Pectoraux</span>
+          <span class="muscle-tag">Triceps</span>
+          <span class="muscle-tag">Épaules ant.</span>
+        </div>
+        <h3>Développé couché barre</h3>
+        <p class="t-body t-graphite mb-16">Exercice de référence pour développer la force et le volume du haut du corps.</p>
+
+        <div class="t-h3" style="margin-bottom: 12px;">Étapes d'exécution</div>
+        <ol>
+          <li>Allonge-toi sur le banc, les pieds bien à plat au sol, les omoplates serrées et plaquées contre le banc.</li>
+          <li>Saisis la barre avec un écartement légèrement plus large que les épaules. Les poignets restent dans le prolongement de l'avant-bras.</li>
+          <li>Décolle la barre du support et amène-la à la verticale de tes pectoraux, bras tendus.</li>
+          <li>Descends la barre lentement jusqu'à effleurer le bas des pectoraux, sans rebond.</li>
+          <li>Pousse la barre vers le haut en gardant les coudes à environ 45° du tronc.</li>
+        </ol>
+
+        <div class="t-h3" style="margin-top: 16px; margin-bottom: 12px;">Erreurs courantes</div>
+        <ol>
+          <li>Décoller les fesses du banc pour soulever plus lourd — c'est tricher et ça abîme le bas du dos.</li>
+          <li>Ouvrir les coudes à 90° du tronc — risque de blessure à l'épaule.</li>
+          <li>Faire rebondir la barre sur la poitrine au lieu de contrôler la descente.</li>
+        </ol>
+
+        <div class="pro-tip">
+          <div class="pro-tip-label">Conseil pro</div>
+          <div class="pro-tip-text">Garde toujours un partenaire ou utilise une cage de squat pour les charges lourdes. Une barre coincée sur la poitrine sans assistance, c'est dangereux.</div>
+        </div>
+      </div>
+
+      <div class="card-title">Exercices populaires</div>
+      <div class="chip-row">
+        <button class="chip">Squat barre</button>
+        <button class="chip">Soulevé de terre</button>
+        <button class="chip">Tractions</button>
+        <button class="chip">Développé militaire</button>
+        <button class="chip">Rowing barre</button>
+        <button class="chip">Dips</button>
+        <button class="chip">Hip thrust</button>
+        <button class="chip">Curl biceps</button>
+      </div>
+
+      <div style="height: 140px;"></div>
+
+      <div class="action-bar">
+        <div class="chat-input-wrap">
+          <input type="text" class="chat-input" placeholder="Tape un exercice ou une question…">
+          <button class="btn-icon" style="background: var(--sage); color: var(--bone); width: 48px; height: 48px;">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9 L15 3 L9 15 L8 10 L3 9 Z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==================================================================
+       TAB BAR
+       ================================================================== -->
+  <nav class="tab-bar" id="tabBar">
+    <button class="tab-item active" data-tab="home" onclick="goToTab('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11 L12 4 L20 11 L20 20 L14 20 L14 14 L10 14 L10 20 L4 20 Z"/></svg>
+      <span class="tab-label">Accueil</span>
+    </button>
+    <button class="tab-item" data-tab="workout" onclick="goToTab('workout')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12 L6 12 M18 12 L21 12 M6 8 L6 16 M18 8 L18 16 M9 6 L9 18 M15 6 L15 18 M9 12 L15 12"/></svg>
+      <span class="tab-label">Séance</span>
+    </button>
+    <button class="tab-item" data-tab="nutrition" onclick="goToTab('nutrition')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 6 C 14 8, 14 11, 12 12 C 10 13, 10 16, 12 18"/></svg>
+      <span class="tab-label">Nutrition</span>
+    </button>
+    <button class="tab-item" data-tab="progress" onclick="goToTab('progress')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18 L9 13 L13 17 L20 8"/><path d="M14 8 L20 8 L20 14"/></svg>
+      <span class="tab-label">Progrès</span>
+    </button>
+    <button class="tab-item" data-tab="coach" onclick="goToTab('coach')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17 C 5 13, 8 11, 12 11 C 16 11, 19 13, 19 17 L 19 19 L 5 19 Z"/><circle cx="12" cy="7" r="3"/></svg>
+      <span class="tab-label">Coach</span>
+    </button>
+  </nav>
+
+  <!-- ==================================================================
+       SHEETS / MODALS
+       ================================================================== -->
+  <div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
+
+  <!-- Sheet recette -->
+  <div class="sheet" id="sheet-recipe-detail">
+    <div class="sheet-handle"></div>
+    <div class="recipe-image">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 36 C 20 22, 28 18, 40 14 C 32 28, 24 34, 12 36 Z"/>
+      </svg>
+    </div>
+    <div class="row-between mb-16">
+      <div>
+        <div class="t-caption">Dîner</div>
+        <h2 class="sheet-title">Poulet curry, quinoa, légumes verts</h2>
+      </div>
+      <button class="btn-icon" onclick="closeSheet()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4 L12 12 M12 4 L4 12"/></svg>
+      </button>
+    </div>
+    <div class="recipe-meta">
+      <div class="recipe-meta-item">
+        <div class="label">Calories</div>
+        <div class="value">620</div>
+      </div>
+      <div class="recipe-meta-item">
+        <div class="label">Protéines</div>
+        <div class="value">45 g</div>
+      </div>
+      <div class="recipe-meta-item">
+        <div class="label">Préparation</div>
+        <div class="value">25 min</div>
+      </div>
+    </div>
+
+    <div class="t-h3 mb-16">Ingrédients</div>
+    <div class="measure-item"><span class="measure-name">Filet de poulet</span><span class="measure-value">180 g</span></div>
+    <div class="measure-item"><span class="measure-name">Quinoa</span><span class="measure-value">80 g</span></div>
+    <div class="measure-item"><span class="measure-name">Brocolis</span><span class="measure-value">150 g</span></div>
+    <div class="measure-item"><span class="measure-name">Lait de coco léger</span><span class="measure-value">100 ml</span></div>
+    <div class="measure-item"><span class="measure-name">Curry en poudre</span><span class="measure-value">2 c. à café</span></div>
+
+    <div style="height: 24px;"></div>
+    <button class="btn btn-primary" onclick="closeSheet()">Valider ce repas</button>
+    <div style="height: 8px;"></div>
+    <button class="btn btn-tertiary" onclick="closeSheet()">Choisir un autre repas</button>
+  </div>
+
+  <!-- Sheet exercice détail -->
+  <div class="sheet" id="sheet-exercise-detail">
+    <div class="sheet-handle"></div>
+    <div class="row-between mb-16">
+      <h2 class="sheet-title">Options de l'exercice</h2>
+      <button class="btn-icon" onclick="closeSheet()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4 L12 12 M12 4 L4 12"/></svg>
+      </button>
+    </div>
+    <div class="list-item">
+      <div class="list-item-icon">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10" cy="10" r="6"/><path d="M10 7 L10 13 M7 10 L13 10"/></svg>
+      </div>
+      <div class="list-item-content">
+        <div class="list-item-title">Voir le guide d'exécution</div>
+        <div class="list-item-sub">Coach IA · muscles, étapes, conseils</div>
+      </div>
+    </div>
+    <div class="list-item">
+      <div class="list-item-icon">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 10 L17 10 M11 4 L17 10 L11 16"/></svg>
+      </div>
+      <div class="list-item-content">
+        <div class="list-item-title">Remplacer cet exercice</div>
+        <div class="list-item-sub">Trouve une alternative</div>
+      </div>
+    </div>
+    <div class="list-item">
+      <div class="list-item-icon">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 4 L15 4 L15 16 L5 16 Z M8 8 L12 8 M8 11 L12 11"/></svg>
+      </div>
+      <div class="list-item-content">
+        <div class="list-item-title">Ajouter une note</div>
+        <div class="list-item-sub">Ressenti, matériel, etc.</div>
+      </div>
+    </div>
+    <div style="height: 16px;"></div>
+    <button class="btn btn-secondary" onclick="closeSheet()">Annuler</button>
+  </div>
+
+</div>
+
+<script>
+  // ==================================================================
+  // Routing entre écrans
+  // ==================================================================
+  const SCREENS = ['welcome', 'onboarding-1', 'onboarding-2', 'onboarding-3', 'home', 'workout', 'nutrition', 'progress', 'coach'];
+  const TABS = ['home', 'workout', 'nutrition', 'progress', 'coach'];
+
+  function goTo(screenId) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const target = document.getElementById('screen-' + screenId);
+    if (target) target.classList.add('active');
+
+    // Tab bar visible uniquement sur les écrans principaux
+    const tabBar = document.getElementById('tabBar');
+    if (TABS.includes(screenId)) {
+      tabBar.style.display = 'flex';
+      // Active le bon tab
+      document.querySelectorAll('.tab-item').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === screenId);
+      });
+    } else {
+      tabBar.style.display = 'none';
+    }
+
+    // Reset scroll
+    document.getElementById('screenContainer').scrollTop = 0;
+  }
+
+  function goToTab(tabId) {
+    goTo(tabId);
+  }
+
+  // ==================================================================
+  // Sélection segments (onboarding)
+  // ==================================================================
+  function selectSegment(btn) {
+    const parent = btn.parentElement;
+    parent.querySelectorAll('.segment-option').forEach(s => s.classList.remove('selected'));
+    btn.classList.add('selected');
+  }
+
+  // ==================================================================
+  // Sheets
+  // ==================================================================
+  function openSheet(id) {
+    document.getElementById('sheetOverlay').classList.add('active');
+    document.getElementById('sheet-' + id).classList.add('active');
+    event && event.stopPropagation && event.stopPropagation();
+  }
+  function closeSheet() {
+    document.getElementById('sheetOverlay').classList.remove('active');
+    document.querySelectorAll('.sheet').forEach(s => s.classList.remove('active'));
+  }
+
+  // ==================================================================
+  // Set rows — toggle done sur clic check
+  // ==================================================================
+  document.querySelectorAll('.set-check').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.currentTarget.parentElement.classList.toggle('done');
+    });
+  });
+
+  // ==================================================================
+  // Shopping items — toggle checked
+  // ==================================================================
+  document.querySelectorAll('.shopping-item').forEach(item => {
+    item.addEventListener('click', () => {
+      item.classList.toggle('checked');
+    });
+  });
+
+  // ==================================================================
+  // Greeting dynamique
+  // ==================================================================
+  (function setGreeting() {
+    const h = new Date().getHours();
+    const el = document.getElementById('greeting');
+    if (!el) return;
+    if (h < 5) el.textContent = 'Bonne nuit';
+    else if (h < 12) el.textContent = 'Bonjour';
+    else if (h < 18) el.textContent = "Bonne après-midi";
+    else el.textContent = 'Bonsoir';
+  })();
+
+  // ==================================================================
+  // Démarrage
+  // ==================================================================
+  goTo('welcome');
+</script>
+
+</body>
+</html>
